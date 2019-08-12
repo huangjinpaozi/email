@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .email-sug {
+            width: 172px;
+            border: 1px solid #ccc;
+            list-style-type: none;
+            padding: 0;
+            margin-top: 0;
+            display: none;
+            color: #ccc;
+            text-indent: 10px;
+            font-size: 14px;
+        }
+        .email-sug li {
+            height: 25px;
+            line-height: 25px;
+        }
+        .email-sug li.active {
+            background-color: skyblue;
+        }
+        .email-sug li:hover {
+            background-color: pink;
+            cursor: pointer;
+        }
+        .email-input {
+            text-indent: 10px;
+            height: 30px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <input id="email-input" type="text" class="email-input">
+        <ul id="email-sug-wrapper" class="email-sug"></ul>
+    </div>
+
+    <script>
+        // 转义
+        function htmlEncode(html) {
+            var temp = document.createElement('div');
+            temp.innerText = html;
+            var output = temp.innerHTML;
+            temp = null;
+            return output;
+        }
+        // 解码
+        function htmlDecode(text) {
+            var temp = document.createElement('div');
+            temp.innerHTML = text;
+            var output = temp.innerText;
+            temp = null;
+            return output;
+        }
+
+        var postfixList = ['163.com', 'gmail.com', '126.com', 'qq.com', '263.net'];
+        var inputDom = document.getElementById('email-input');
+            sugDom = document.getElementById('email-sug-wrapper');
+        var inputText, nowLi = 0;
+        window.onload = function() {
+            inputDom.focus();
+        }
+        // 文本框事件
+        inputDom.addEventListener('input', function() {
+            getInput();
+            sugText();
+            ctrlDisplay();
+        });
+        
+        // 获取input内容
+        function getInput() {
+            inputText = document.getElementById('email-input').value;
+            return inputText.trim();
+        }
+        // 提示框的内容
+        function sugText() {
+            sugDom.innerHTML = '';
+            var text = getInput();
+            text = htmlEncode(text);
+            if(text.indexOf('@') > -1) {
+                var textFormer = text.slice(0, text.indexOf('@'));
+                var textLatter = text.slice(text.indexOf('@')+1);
+            }
+            for(var i=0; i<postfixList.length;i++) {
+                // 如果有@
+                if(text.indexOf('@') >-1) {
+                    if(postfixList[i].indexOf(textLatter) == 0) {
+                        var li = document.createElement('li');
+                        li.innerText = textFormer + '@' + postfixList[i];
+                    }
+                } else {
+                    // 如果没有@
+                    var li = document.createElement('li');
+                    li.innerText = text + '@' +postfixList[i];
+                }
+                if(li) {
+                    sugDom.appendChild(li);
+                }
+            }
+            if(!sugDom.firstElementChild.classList.contains('active')) {
+                sugDom.firstElementChild.className = 'active';
+            }
+        }
+        // 当前li的显示  
+        function nowLiDisplay() {
+            var liAll = document.querySelectorAll('.email-sug li');
+            liAll[nowLi].className = 'active';
+        }
+        // 控制ul显示
+        function ctrlDisplay() {
+            if(getInput() == '') {
+                sugHidden();
+            } else {
+                sugShow();
+            }
+        }
+        function sugShow() {
+            sugDom.style.display = 'block';
+        }
+        function sugHidden() {
+            sugDom.style.display = 'none';
+        }
+        // 鼠标点击提示框
+        sugDom.onclick = function(e) {
+            for(i in sugDom.children) {
+                if(e.target == sugDom.children[i]) {
+                    var text = sugDom.children[i].innerText;
+                    text = htmlDecode(text);
+                    inputDom.value = text;
+                    sugHidden();
+                    inputDom.focus();
+                }
+            }
+        }
+
+        // 特殊3个键的监听事件
+        // 回车13，上38，下40,esc27
+        inputDom.addEventListener('keydown', function(e) {
+            if(e.keyCode==13 || e.keyCode==38 ||e.keyCode==40) {
+                var liAll = document.querySelectorAll('.email-sug li');
+                liAll[nowLi].classList.remove('active');
+                if(e.keyCode == 38) {
+                    if(nowLi == 0) {
+                        nowLi = sugDom.children.length - 1;
+                    } else {
+                        nowLi -= 1;
+                    }
+                }
+                if(e.keyCode == 40) {
+                    if(nowLi == liAll.length-1) {
+                        nowLi = 0;
+                    } else {
+                        nowLi += 1;
+                    }
+                }
+                if(e.keyCode == 13) {
+                    var text = liAll[nowLi].innerText;
+                    text = htmlDecode(text);
+                    inputDom.value = text;
+                    sugHidden();
+                }
+            liAll[nowLi].className = 'active';
+            }
+            if(e.keyCode == 27) {
+                inputDom.select(); //选中文本框内的文字
+            }
+        })
+    </script>
+</body>
+</html>
